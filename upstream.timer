@@ -1,0 +1,10 @@
+[Unit]                                                                                                                           
+Description=AdGuardHome Upstream Timer                                                                                           
+After=network-online.target                                                                                                      
+                                                                                                                                 
+[Timer]                                                                                                                          
+OnCalendar=*-*-* 5:00                                                                                                            
+Unit=upstream.service                                                                                                            
+                                                                                                                                 
+[Install]                                                                                                                        
+WantedBy=multi-user.target
