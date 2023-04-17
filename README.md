@@ -3,7 +3,7 @@
 [![adguardhome-upstream](https://img.shields.io/badge/GitHub-AdGuardHome%20Upstream-blueviolet?style=flat-square&logo=github)](https://github.com/fernvenue/adguardhome-upstream)
 [![adguardhome-upstream](https://img.shields.io/badge/GitLab-AdGuardHome%20Upstream-orange?style=flat-square&logo=gitlab)](https://gitlab.com/fernvenue/adguardhome-upstream)
 
-The application of [felixonmars/dnsmasq-china-list](https://github.com/felixonmars/dnsmasq-china-list) on [AdGuardHome](https://github.com/AdGuardTeam/AdGuardHome).
+Use [felixonmars/dnsmasq-china-list](https://github.com/felixonmars/dnsmasq-china-list) with [AdGuardHome](https://github.com/AdGuardTeam/AdGuardHome).
 
 * [Steps for usage](#steps-for-usage)
     * [Before starting](#before-starting)
@@ -14,6 +14,7 @@ The application of [felixonmars/dnsmasq-china-list](https://github.com/felixonma
     * [Files in repository](#files-in-repository)
     * [How felixonmars's dnsmasq-china-list works?](#how-felixonmarss-dnsmasq-china-list-works)
     * [Why it's better than other methods?](#why-its-better-than-other-methods)
+    * [Important mentions!](#important-mentions)
 * [Something else](#something-else)
     * [Always use the recommended configuration first](#always-use-the-recommended-configuration-first)
     * [This is not for...](#this-is-not-for)
@@ -98,6 +99,12 @@ Using specific upstreams for some domains is a common way to accelerate internet
 ### Why it's better than other methods?
 
 On the one hand, for DNS resolution, when the domain's name server is in other region, even if the domain is resolved to an address in mainland China, we can still get the fastest resolution by DNS request from the other region in most cases, you might say that some DNS servers have caches, usually it brings a lot of problems. In fact, AdGuardHome has adopted optimistic caching since v0.107, which is much better than relying on upstream DNS caching. On the other hand, many tests are showing that some of the poisoned results are IP addresses located in anywhere. Therefore, it is impractical to infer whether the result is poisoned by the location of the IP address. This list only includes domains that use NS servers from mainland China, that's why it is better than redir-host or any other similar methods. 
+
+### Important mentions!
+
+It's highly NOT recommanded that use any other list, because felixonmars's dnsmasq-china-list actively updated, and has clear rule to determine whether a domain should or shouldn't be added to the list, it's also very precise and efficient, some shit project like to list all subdomains of a domain to a list, but actually you can just use `[/example.com/]` to include them, because a domain itslef and all it's subdomains use same NS! Why these shit project like to list all these subdomains to make things slow and complicated?! Upstream list is definitely not better just because it's larger, it's better when it's more accurate, and actually a larger list is even worse in most cases!
+
+By the way, it's also highly NOT recommanded that use domain SNI instead of IP address for some public DNS servers has certificates on their IP addresses, like `tls://8.8.4.4`, it's actually better than `tls://dns.google`, using an IP address can not only prevent SNI-based RST, but also save additional DNS query to the DNS server itself, why these shit project like to use domain instead of IP address?
 
 ## Something else
 
