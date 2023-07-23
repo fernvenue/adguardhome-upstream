@@ -2,11 +2,11 @@
 set -e
 DATE=`date --rfc-3339 sec`
 echo "$DATE: IPv4 connection testing..."
-if ping -c 3 "101.6.6.6" > /dev/null 2>&1; then
+if ping -c 3 "223.5.5.5" > /dev/null 2>&1; then
 	IPv4="true"
 fi
 echo "$DATE: IPv6 connection testing..."
-if ping -c 3 "2001:da8::666" > /dev/null 2>&1; then
+if ping -c 3 "2400:3200::1" > /dev/null 2>&1; then
 	IPv6="true"
 fi
 if [[ $IPv4 == "true" ]]; then
