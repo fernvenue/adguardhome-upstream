@@ -3,7 +3,7 @@
 [![adguardhome-upstream](https://img.shields.io/badge/GitHub-AdGuardHome%20Upstream-blueviolet?style=flat-square&logo=github)](https://github.com/fernvenue/adguardhome-upstream)
 [![adguardhome-upstream](https://img.shields.io/badge/GitLab-AdGuardHome%20Upstream-orange?style=flat-square&logo=gitlab)](https://gitlab.com/fernvenue/adguardhome-upstream)
 
-Use [felixonmars/dnsmasq-china-list](https://github.com/felixonmars/dnsmasq-china-list) with [AdGuardHome](https://github.com/AdGuardTeam/AdGuardHome).
+Use [felixonmars/dnsmasq-china-list](https://github.com/felixonmars/dnsmasq-china-list) with [AdGuardHome](https://github.com/AdGuardTeam/AdGuardHome) on Linux, macOS and other Unix systems.
 
 * [Steps for usage](#steps-for-usage)
     * [Before starting](#before-starting)
