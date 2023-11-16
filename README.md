@@ -7,6 +7,7 @@ Use [felixonmars/dnsmasq-china-list](https://github.com/felixonmars/dnsmasq-chin
 
 * [Steps for usage](#steps-for-usage)
     * [Before starting](#before-starting)
+    * [Change settings](#change-settings)
     * [Get and run the script](#get-and-run-the-script)
     * [Use systemd timer to automate](#use-systemd-timer-to-automate)
 * [Features and details](#features-and-details)
@@ -49,7 +50,7 @@ The option `upstream_dns_file` allows you to loading upstreams from a file, `all
 
 On most Unix systems you can find the `AdGuardHome.yaml` in `/opt/AdGuardHome`, but on macOS you should go `/Applications/AdGuardHome`, or maybe you can try `find /* -name AdGuardHome.yaml` to find it.
 
-By the way, it's highly recommended to set reliable DNS servers as [`fallback_dns`](https://github.com/AdguardTeam/AdGuardHome/wiki/Configuration#configuration-file). 
+By the way, it's highly recommended to set reliable DNS servers as [`fallback_dns`](https://github.com/AdguardTeam/AdGuardHome/wiki/Configuration#configuration-file).
 
 ### Get and run the script
 
