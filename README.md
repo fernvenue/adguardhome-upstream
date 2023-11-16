@@ -63,7 +63,7 @@ chmod +x /usr/local/bin/upstream.sh
 
 #### What if I using non-systemd Unix system?
 
-If you are using AdGuardHome on non-systemd system, just replace the `systemctl restart AdGuardHome` in [upstream.sh](./upstream.sh) to the command that you restart the AdGuardHome. For example in openwrt: `sed -i "s|systemctl restart AdGuardHome|/etc/init.d/AdGuardHome|" /usr/local/bin/upstream`, that's all.
+If you are using AdGuardHome on non-systemd system, just replace the `systemctl restart AdGuardHome` in [upstream.sh](./upstream.sh) to the command that you restart the AdGuardHome. For example in `init.d` management: `sed -i "s|systemctl restart AdGuardHome|/etc/init.d/AdGuardHome|" /usr/local/bin/upstream`, that's all.
 
 ### Use systemd timer to automate
 
