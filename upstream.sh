@@ -41,6 +41,10 @@ echo "$DATE: Cleaning..."
 rm /var/tmp/*.upstream
 /etc/init.d/AdGuardHome restart
 echo "$DATE: All finished!"
-echo "$DATE: 开始添加到crontab"
-(crontab -l 2>/dev/null; echo "0 3 * * * /usr/local/bin/upstream.sh") | crontab -
-echo "$DATE: 已将 /usr/local/bin/upstream.sh 添加到crontab中"
+if crontab -l | grep -q '/usr/local/bin/upstream.sh'; then
+    echo "$DATE: 定时任务已存在。"
+else
+    echo "$DATE: 开始添加到crontab"
+    (crontab -l 2>/dev/null; echo "0 3 * * * /usr/local/bin/upstream.sh") | crontab -
+    echo "$DATE: 已将 /usr/local/bin/upstream.sh 添加到crontab中"
+fi
