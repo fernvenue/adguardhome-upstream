@@ -1,4 +1,4 @@
-# AdGuardHome Upstream
+# AdGuardHome Upstream for OpenWrt
 
 [![adguardhome-upstream](https://img.shields.io/badge/GitHub-AdGuardHome%20Upstream-blueviolet?style=flat-square&logo=github)](https://github.com/fernvenue/adguardhome-upstream)
 [![adguardhome-upstream](https://img.shields.io/badge/GitLab-AdGuardHome%20Upstream-orange?style=flat-square&logo=gitlab)](https://gitlab.com/fernvenue/adguardhome-upstream)
@@ -6,19 +6,19 @@
 Use [felixonmars/dnsmasq-china-list](https://github.com/felixonmars/dnsmasq-china-list) with [AdGuardHome](https://github.com/AdGuardTeam/AdGuardHome).
 
 * [Steps for usage](#steps-for-usage)
-    * [Before starting](#before-starting)
-    * [Get and run the script](#get-and-run-the-script)
-    * [Use systemd timer to automate](#use-systemd-timer-to-automate)
+  * [Before starting](#before-starting)
+  * [Get and run the script](#get-and-run-the-script)
+  * [Use systemd timer to automate](#use-systemd-timer-to-automate)
 * [Features and details](#features-and-details)
-    * [Features](#features)
-    * [Files in repository](#files-in-repository)
-    * [How felixonmars's dnsmasq-china-list works?](#how-felixonmarss-dnsmasq-china-list-works)
-    * [Why it's better than other methods?](#why-its-better-than-other-methods)
-    * [Important mentions!](#important-mentions)
+  * [Features](#features)
+  * [Files in repository](#files-in-repository)
+  * [How felixonmars's dnsmasq-china-list works?](#how-felixonmarss-dnsmasq-china-list-works)
+  * [Why it's better than other methods?](#why-its-better-than-other-methods)
+  * [Important mentions!](#important-mentions)
 * [Something else](#something-else)
-    * [Always use the recommended configuration first](#always-use-the-recommended-configuration-first)
-    * [This is not for...](#this-is-not-for)
-    * [Links](#links)
+  * [Always use the recommended configuration first](#always-use-the-recommended-configuration-first)
+  * [This is not for...](#this-is-not-for)
+  * [Links](#links)
 
 ## Steps for usage
 
@@ -32,43 +32,20 @@ First, [cURL](https://curl.se/) and [sed](https://www.gnu.org/software/sed/) are
 
 <details><summary>What do these options do?</summary>
 
+
 The option `upstream_dns_file` allows you to loading upstreams from a file, `all_servers` enables parallel queries to all configured upstream servers to speed up resolving, and `cache_optimistic` makes AdGuardHome respond to client from cache first and send new request at the same time to the upstream and update the cache. For more information please read the [AdGuardHome Wiki](https://github.com/AdguardTeam/AdGuardHome/wiki/Configuration).
 
 </details>
 
-On most Unix systems you can find the `AdGuardHome.yaml` in `/opt/AdGuardHome`, but on macOS you should go `/Applications/AdGuardHome`, or maybe you can try `find /* -name AdGuardHome.yaml` to find it.
+OpenWrt  AdGuardHome.yaml path `/etc/AdGuardHome.yaml`
 
 ### Get and run the script
 
-At this step, there is the possibility of DNS failure, please clearly understand and pay attention to back up your DNS settings.
+one-step.sh
 
+```bash
+wget https://raw.githubusercontent.com/sumuen/adguardhome-upstream/master/one_step.sh --no-check-certificate && chmod +x ./one_step.sh  && ./one_step.sh 
 ```
-curl -o "/usr/local/bin/upstream.sh" "https://gitlab.com/fernvenue/adguardhome-upstream/-/raw/master/upstream.sh"
-chmod +x /usr/local/bin/upstream.sh
-/usr/local/bin/upstream.sh
-```
-
-<details><summary>What if I using non-systemd Unix system?</summary>
-
-If you are using AdGuardHome on non-systemd system, just replace the `systemctl restart AdGuardHome` in [upstream.sh](./upstream.sh) to the command that you restart the AdGuardHome. For example in openwrt: `sed -i "s|systemctl restart AdGuardHome|/etc/init.d/AdGuardHome|" /usr/local/bin/upstream`, that's all.
-
-</details>
-
-### Use systemd timer to automate
-
-In the template provided by this repository, the timer is set to call the systemd service **once a day at 5am**.
-
-```
-curl -o "/etc/systemd/system/upstream.service" "https://gitlab.com/fernvenue/adguardhome-upstream/-/raw/master/upstream.service"
-curl -o "/etc/systemd/system/upstream.timer" "https://gitlab.com/fernvenue/adguardhome-upstream/-/raw/master/upstream.timer"
-systemctl enable upstream.timer
-systemctl start upstream.timer
-systemctl status upstream
-```
-
-<details><summary>What if I using non-systemd Unix system?</summary>
-
-Maybe you can use [cron](https://en.wikipedia.org/wiki/Cron) to automate it, for example add `0 5 * * * /usr/local/bin/upstream.sh` to the cron configuration, and the configuration file for a user can be edited by calling `crontab -e` regardless of where the actual implementation stores this file.
 
 </details>
 
