@@ -38,6 +38,8 @@ The option `upstream_dns_file` allows you to loading upstreams from a file, `all
 
 On most Unix systems you can find the `AdGuardHome.yaml` in `/opt/AdGuardHome`, but on macOS you should go `/Applications/AdGuardHome`, or maybe you can try `find /* -name AdGuardHome.yaml` to find it.
 
+By the way, it's highly recommended to set reliable DNS servers as [`fallback_dns`](https://github.com/AdguardTeam/AdGuardHome/wiki/Configuration#configuration-file).
+
 ### Get and run the script
 
 At this step, there is the possibility of DNS failure, please clearly understand and pay attention to back up your DNS settings.
