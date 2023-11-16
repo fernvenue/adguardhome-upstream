@@ -42,13 +42,9 @@ And now let's change some settings:
 - `all_servers` **should be** `true`.
 - `cache_optimistic` is recommended to be `true`.
 
-<details><summary>What do these options do?</summary>
+What do these options do?
 
 The option `upstream_dns_file` allows you to loading upstreams from a file, `all_servers` enables parallel queries to all configured upstream servers to speed up resolving, and `cache_optimistic` makes AdGuardHome respond to client from cache first and send new request at the same time to the upstream and update the cache. For more information please read the [AdGuardHome Wiki](https://github.com/AdguardTeam/AdGuardHome/wiki/Configuration).
-
-</details>
-
-On most Unix systems you can find the `AdGuardHome.yaml` in `/opt/AdGuardHome`, but on macOS you should go `/Applications/AdGuardHome`, or maybe you can try `find /* -name AdGuardHome.yaml` to find it.
 
 By the way, it's highly recommended to set reliable DNS servers as [`fallback_dns`](https://github.com/AdguardTeam/AdGuardHome/wiki/Configuration#configuration-file).
 
@@ -62,11 +58,9 @@ chmod +x /usr/local/bin/upstream.sh
 /usr/local/bin/upstream.sh
 ```
 
-<details><summary>What if I using non-systemd Unix system?</summary>
+What if I using non-systemd Unix system?
 
 If you are using AdGuardHome on non-systemd system, just replace the `systemctl restart AdGuardHome` in [upstream.sh](./upstream.sh) to the command that you restart the AdGuardHome. For example in openwrt: `sed -i "s|systemctl restart AdGuardHome|/etc/init.d/AdGuardHome|" /usr/local/bin/upstream`, that's all.
-
-</details>
 
 ### Use systemd timer to automate
 
@@ -80,11 +74,9 @@ systemctl start upstream.timer
 systemctl status upstream
 ```
 
-<details><summary>What if I using non-systemd Unix system?</summary>
+What if I using non-systemd Unix system?
 
 Maybe you can use [cron](https://en.wikipedia.org/wiki/Cron) to automate it, for example add `0 5 * * * /usr/local/bin/upstream.sh` to the cron configuration, and the configuration file for a user can be edited by calling `crontab -e` regardless of where the actual implementation stores this file.
-
-</details>
 
 ## Features and details
 
