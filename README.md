@@ -39,6 +39,8 @@ The option `upstream_dns_file` allows you to loading upstreams from a file, `all
 
 OpenWrt  AdGuardHome.yaml path `/etc/AdGuardHome.yaml`
 
+By the way, it's highly recommended to set reliable DNS servers as [`fallback_dns`](https://github.com/AdguardTeam/AdGuardHome/wiki/Configuration#configuration-file).
+
 ### Get and run the script
 
 one-step.sh
