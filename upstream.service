@@ -1,9 +1,10 @@
 [Unit]
 Description=AdGuardHome Upstream Service
+Documentation=https://gitlab.com/fernvenue/adguardhome-upstream
 After=network-online.target
 
 [Service]
-Type=simple
-Restart=on-failure                                                                                                               
+Type=oneshot
+Restart=on-failure
 RestartSec=5s
 ExecStart=/bin/bash /usr/local/bin/upstream.sh
