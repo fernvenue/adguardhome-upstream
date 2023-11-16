@@ -24,7 +24,16 @@ Use [felixonmars/dnsmasq-china-list](https://github.com/felixonmars/dnsmasq-chin
 
 ### Before starting
 
-First, [cURL](https://curl.se/) and [sed](https://www.gnu.org/software/sed/) are required. And before starting, you need to change some settings in `AdGuardHome.yaml`:
+First, [cURL](https://curl.se/) and [sed](https://www.gnu.org/software/sed/) are required. And before starting, you need to find your AdGuardHome configuration file `AdGuardHome.yaml`, this configuration file is in the root directory of AdGuardHome, on most Unix systems the default directory is `/opt/AdGuardHome`, but on macOS it's `/Applications/AdGuardHome`. It depends on how you installed AdGuardHome.
+
+```
+~# find / -name AdGuardHome.yaml
+/opt/AdGuardHome/AdGuardHome.yaml
+```
+
+Or you can use `find` command to find the configuration file in whole `/` directory like above.
+
+And now let's change some settings:
 
 - `upstream_dns_file` **must be** `/usr/share/adguardhome.upstream`.
 - `all_servers` **should be** `true`.
@@ -38,7 +47,7 @@ The option `upstream_dns_file` allows you to loading upstreams from a file, `all
 
 On most Unix systems you can find the `AdGuardHome.yaml` in `/opt/AdGuardHome`, but on macOS you should go `/Applications/AdGuardHome`, or maybe you can try `find /* -name AdGuardHome.yaml` to find it.
 
-By the way, it's highly recommended to set reliable DNS servers as [`fallback_dns`](https://github.com/AdguardTeam/AdGuardHome/wiki/Configuration#configuration-file).
+By the way, it's highly recommended to set reliable DNS servers as [`fallback_dns`](https://github.com/AdguardTeam/AdGuardHome/wiki/Configuration#configuration-file). 
 
 ### Get and run the script
 
