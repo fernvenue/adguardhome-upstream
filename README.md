@@ -104,7 +104,7 @@ Maybe you can use [cron](https://en.wikipedia.org/wiki/Cron) to automate it, for
 
 ### How felixonmars's dnsmasq-china-list works?
 
-Using specific upstreams for some domains is a common way to accelerate internet in mainland China. This list collects domains that use NS servers located in mainland China, allowing us to use some DNS servers for them that don't break CDN or geo-based results, while using encrypted and trusted DNS servers for other domains.
+Using specific upstreams for some domains is a common way to accelerate internet in mainland China. This list collects domains that use NS servers (**NS IS NOT THE SAME THING WITH DNS!!**) located in mainland China, allowing us to use some DNS servers for them that don't break CDN or geo-based results, while using encrypted and trusted DNS servers for other domains.
 
 ### Why it's better than other methods?
 
@@ -112,7 +112,7 @@ On the one hand, for DNS resolution, when the domain's name server is in other r
 
 ### Important mentions!
 
-It's highly NOT recommanded that use any other list, because felixonmars's dnsmasq-china-list actively updated, and has clear rule to determine whether a domain should or shouldn't be added to the list, it's also very precise and efficient, some shit project like to list all subdomains of a domain to a list, but actually you can just use `[/example.com/]` to include them, because a domain itslef and all it's subdomains use same NS! Why these shit project like to list all these subdomains to make things slow and complicated?! Upstream list is definitely not better just because it's larger, it's better when it's more accurate, and actually a larger list is even worse in most cases!
+It's highly NOT recommanded that use any other list, because felixonmars's dnsmasq-china-list actively updated, and has clear rule to determine whether a domain should or shouldn't be added to the list, as above, it uses the location of NS (**YES! NS IS NOT THE SAME THING WITH DNS!!**) as a differentiating criterion. It's also very precise and efficient, some shit projects like to list all subdomains of a domain to a list, but actually you can just use `[/example.com/]` to include them, because a domain itslef and all it's subdomains use same NS! Why these shit project like to list all these subdomains to make things slow and complicated?! Upstream list is definitely not better just because it's larger, it's better when it's more accurate, and actually a larger list is even worse in most cases!
 
 By the way, it's also highly NOT recommanded that use domain SNI instead of IP address for some public DNS servers has certificates on their IP addresses, like `tls://8.8.4.4`, it's actually better than `tls://dns.google`, using an IP address can not only prevent SNI-based RST, but also save additional DNS query to the DNS server itself, why these shit project like to use domain instead of IP address?
 
