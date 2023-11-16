@@ -33,6 +33,8 @@ First, [cURL](https://curl.se/) and [sed](https://www.gnu.org/software/sed/) are
 
 Or you can use `find` command to find the configuration file in whole `/` directory like above.
 
+### Change settings
+
 And now let's change some settings:
 
 - `upstream_dns_file` **must be** `/usr/share/adguardhome.upstream`.
