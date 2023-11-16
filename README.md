@@ -8,8 +8,11 @@ Use [felixonmars/dnsmasq-china-list](https://github.com/felixonmars/dnsmasq-chin
 * [Steps for usage](#steps-for-usage)
     * [Before starting](#before-starting)
     * [Change settings](#change-settings)
+        * [What do these options do?](#what-do-these-options-do)
     * [Get and run the script](#get-and-run-the-script)
+        * [What if I using non-systemd Unix system?](#what-if-i-using-non-systemd-unix-system)
     * [Use systemd timer to automate](#use-systemd-timer-to-automate)
+        * [What if I using non-systemd Unix system?](#what-if-i-using-non-systemd-unix-system-1)
 * [Features and details](#features-and-details)
     * [Features](#features)
     * [Files in repository](#files-in-repository)
@@ -42,7 +45,7 @@ And now let's change some settings:
 - `all_servers` **should be** `true`.
 - `cache_optimistic` is recommended to be `true`.
 
-What do these options do?
+#### What do these options do?
 
 The option `upstream_dns_file` allows you to loading upstreams from a file, `all_servers` enables parallel queries to all configured upstream servers to speed up resolving, and `cache_optimistic` makes AdGuardHome respond to client from cache first and send new request at the same time to the upstream and update the cache. For more information please read the [AdGuardHome Wiki](https://github.com/AdguardTeam/AdGuardHome/wiki/Configuration).
 
@@ -58,7 +61,7 @@ chmod +x /usr/local/bin/upstream.sh
 /usr/local/bin/upstream.sh
 ```
 
-What if I using non-systemd Unix system?
+#### What if I using non-systemd Unix system?
 
 If you are using AdGuardHome on non-systemd system, just replace the `systemctl restart AdGuardHome` in [upstream.sh](./upstream.sh) to the command that you restart the AdGuardHome. For example in openwrt: `sed -i "s|systemctl restart AdGuardHome|/etc/init.d/AdGuardHome|" /usr/local/bin/upstream`, that's all.
 
@@ -74,7 +77,7 @@ systemctl start upstream.timer
 systemctl status upstream
 ```
 
-What if I using non-systemd Unix system?
+#### What if I using non-systemd Unix system?
 
 Maybe you can use [cron](https://en.wikipedia.org/wiki/Cron) to automate it, for example add `0 5 * * * /usr/local/bin/upstream.sh` to the cron configuration, and the configuration file for a user can be edited by calling `crontab -e` regardless of where the actual implementation stores this file.
 
