@@ -72,14 +72,15 @@ In the template provided by this repository, the timer is set to call the system
 ```
 curl -o "/etc/systemd/system/upstream.service" "https://gitlab.com/fernvenue/adguardhome-upstream/-/raw/master/upstream.service"
 curl -o "/etc/systemd/system/upstream.timer" "https://gitlab.com/fernvenue/adguardhome-upstream/-/raw/master/upstream.timer"
-systemctl enable upstream.timer
-systemctl start upstream.timer
+systemctl enable upstream.timer --now
 systemctl status upstream
 ```
 
 #### What if I using non-systemd Unix system?
 
 Maybe you can use [cron](https://en.wikipedia.org/wiki/Cron) to automate it, for example add `0 5 * * * /usr/local/bin/upstream.sh` to the cron configuration, and the configuration file for a user can be edited by calling `crontab -e` regardless of where the actual implementation stores this file.
+
+*On Unix systems with systemd, it is always recommended to use systemd timers instead of cron for more complex recurring tasks and detailed logging. This will help us better discover and identify issues.*
 
 ## Features and details
 
