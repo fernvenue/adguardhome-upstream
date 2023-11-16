@@ -31,11 +31,11 @@ fi
 echo "$DATE: Getting data updates..."
 curl -s https://gitlab.com/fernvenue/chn-domains-list/-/raw/master/CHN.ALL.agh | sed "/#/d" > "/var/tmp/chinalist.upstream"
 echo "$DATE: Processing data format..."
-cat "/var/tmp/default.upstream" "/var/tmp/chinalist.upstream" > /usr/local/share/adguardhome.upstream
+cat "/var/tmp/default.upstream" "/var/tmp/chinalist.upstream" > /usr/share/adguardhome.upstream
 if [[ $IPv4 == "true" ]]; then
-        sed -i "s|114.114.114.114|h3://223.5.5.5:443/dns-query h3://223.6.6.6:443/dns-query|g" /usr/local/share/adguardhome.upstream
+        sed -i "s|114.114.114.114|h3://223.5.5.5:443/dns-query h3://223.6.6.6:443/dns-query|g" /usr/share/adguardhome.upstream
 else
-        sed -i "s|114.114.114.114|2400:3200::1 2400:3200:baba::1|g" /usr/local/share/adguardhome.upstream
+        sed -i "s|114.114.114.114|2400:3200::1 2400:3200:baba::1|g" /usr/share/adguardhome.upstream
 fi
 echo "$DATE: Cleaning..."
 rm /var/tmp/*.upstream
