@@ -1,99 +1,67 @@
 #!/bin/bash
-set -e
 if [ "$(ps -o comm= $PPID)" == "systemd" ]; then
-    SYSTEMD=1
-fi
-if [[ $SYSTEMD == 1 ]]; then
-    echo "IPv4 connection testing..."
+    IS_SYSTEMD=1
 else
-	DATE=`date --rfc-3339 sec`
-    echo "$DATE: IPv4 connection testing..."
+    IS_SYSTEMD=0
 fi
+log() {
+	if [[ $IS_SYSTEMD == 1 ]]; then
+		echo $1
+	else
+		echo "$(date --rfc-3339 sec): $1"
+	fi
+}
+set -e
+
+log "IPv4 connection testing..."
+
 if ping -c 3 "223.6.6.6" > /dev/null 2>&1; then
 	IPv4="true"
 fi
-if [[ $SYSTEMD == 1 ]]; then
-    echo "IPv6 connection testing..."
-else
-	DATE=`date --rfc-3339 sec`
-    echo "$DATE: IPv6 connection testing..."
-fi
+
+log "IPv6 connection testing..."
 if ping -c 3 "2400:3200:baba::1" > /dev/null 2>&1; then
 	IPv6="true"
 fi
+
 if [[ $IPv4 == "true" ]]; then
 	if [[ $IPv6 == "true" ]]; then
-		if [[ $SYSTEMD == 1 ]]; then
-			echo "IPv4 and IPv6 connections both available."
-		else
-			DATE=`date --rfc-3339 sec`
-			echo "$DATE: IPv4 and IPv6 connections both available."
-		fi
+		log "IPv4 and IPv6 connections both available."
 		curl -o "/tmp/default.upstream" https://gitlab.com/fernvenue/adguardhome-upstream/-/raw/master/v6.conf > /dev/null 2>&1
 	else
-		if [[ $SYSTEMD == 1 ]]; then
-			echo "Only IPv4 connection available."
-		else
-			DATE=`date --rfc-3339 sec`
-			echo "$DATE: Only IPv4 connection available."
-		fi
+		log "Only IPv4 connection available."
 		curl -o "/tmp/default.upstream" https://gitlab.com/fernvenue/adguardhome-upstream/-/raw/master/v4.conf > /dev/null 2>&1
 	fi
 else
 	if [[ $IPv6 == "true" ]]; then
-		if [[ $SYSTEMD == 1 ]]; then
-			echo "Only IPv6 connection available."
-		else
-			DATE=`date --rfc-3339 sec`
-			echo "$DATE: Only IPv6 connection available."
-		fi
+		log "Only IPv6 connection available."
 		curl -o "/tmp/default.upstream" https://gitlab.com/fernvenue/adguardhome-upstream/-/raw/master/v6only.conf > /dev/null 2>&1
 	else
-		if [[ $SYSTEMD == 1 ]]; then
-			echo "No available network connection was detected, please try again."
-		else
-			DATE=`date --rfc-3339 sec`
-			echo "$DATE: No available network connection was detected, please try again."
-		fi
+		log "No available network connection was detected, please try again."
 		exit 1
 	fi
 fi
-if [[ $SYSTEMD == 1 ]]; then
-    echo "Getting data updates..."
-else
-	DATE=`date --rfc-3339 sec`
-    echo "$DATE: Getting data updates..."
-fi
+
+log "Getting data updates..."
 curl -s https://gitlab.com/fernvenue/chn-domains-list/-/raw/master/CHN.ALL.agh | sed "/#/d" > "/tmp/chinalist.upstream"
-if [[ $SYSTEMD == 1 ]]; then
-    echo "Processing data format..."
-else
-	DATE=`date --rfc-3339 sec`
-    echo "$DATE: Processing data format..."
-fi
+
+log "Processing data format..."
 cat "/tmp/default.upstream" "/tmp/chinalist.upstream" > /usr/share/adguardhome.upstream
+
 if [[ $IPv4 == "true" ]]; then
 	sed -i "s|114.114.114.114|h3://223.5.5.5:443/dns-query h3://223.6.6.6:443/dns-query|g" /usr/share/adguardhome.upstream
 else
 	sed -i "s|114.114.114.114|2400:3200::1 2400:3200:baba::1|g" /usr/share/adguardhome.upstream
 fi
-if [[ $SYSTEMD == 1 ]]; then
-    echo "Cleaning..."
-else
-	DATE=`date --rfc-3339 sec`
-    echo "$DATE: Cleaning..."
-fi
+
+log "Cleaning..."
 rm /tmp/*.upstream
-if [[ $SYSTEMD == 1 ]]; then
-    echo "Restarting AdGuardHome service..."
-else
-	DATE=`date --rfc-3339 sec`
-    echo "$DATE: Restarting AdGuardHome service..."
-fi
+
+log "Restarting AdGuardHome service..."
 systemctl restart AdGuardHome
-if [[ $SYSTEMD == 1 ]]; then
-    echo "All finished!"
-else
-	DATE=`date --rfc-3339 sec`
-    echo "$DATE: All finished!"
-fi
+
+log "All finished!"
+
+unset IS_SYSTEMD
+unset IPv4
+unset IPv6
