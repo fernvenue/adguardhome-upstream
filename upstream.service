@@ -1,10 +1,17 @@
 [Unit]
 Description=AdGuardHome Upstream Service
-Documentation=https://gitlab.com/fernvenue/adguardhome-upstream
+Documentation=https://github.com/fernvenue/dns-upstream
 After=network-online.target
 
 [Service]
 Type=oneshot
 Restart=on-failure
 RestartSec=5s
+# Environment=DEFAULT_UPSTREAMS_ENV="2001:db8::1,[2001:db8::2]:53,203.0.113.1"
+# Environment=DEFAULT_UPSTREAM_FILE="/etc/upstream.conf"
+# Environment=UPSTREAM_FILE_URL="https://example.com/upstream.conf"
+# Environment=OUTPUT_FILE="/opt/AdGuardHome/AdGuardHome.upstream"
+# Environment=REPLACE_UPSTREAM_DNS="2001:db8::53"
+# Environment=RESTART_SERVICE="AdGuardHome"
+# Environment=LOG_LEVEL="info"
 ExecStart=/bin/bash /usr/local/bin/upstream.sh

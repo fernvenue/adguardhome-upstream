@@ -108,12 +108,25 @@ replace_dns_in_upstream() {
 }
 
 DEFAULT_UPSTREAMS=()
-DEFAULT_UPSTREAM_FILE=""
-UPSTREAM_FILE_URL="https://gitlab.com/fernvenue/chn-domains-list/-/raw/master/CHN.ALL.agh"
-OUTPUT_FILE="/opt/AdGuardHome/AdGuardHome.upstream"
-REPLACE_UPSTREAM_DNS=""
-RESTART_SERVICE=""
-LOG_LEVEL="info"
+if [[ -n "${DEFAULT_UPSTREAMS_ENV:-}" ]]; then
+    IFS=',' read -ra ADDR <<< "$DEFAULT_UPSTREAMS_ENV"
+    for upstream in "${ADDR[@]}"; do
+        upstream=$(echo "$upstream" | xargs)
+        if [[ -n "$upstream" ]]; then
+            if ! validate_upstream "$upstream"; then
+                log "Error: Invalid upstream format in environment variable: $upstream" error
+                exit 1
+            fi
+            DEFAULT_UPSTREAMS+=("$upstream")
+        fi
+    done
+fi
+DEFAULT_UPSTREAM_FILE="${DEFAULT_UPSTREAM_FILE:-}"
+UPSTREAM_FILE_URL="${UPSTREAM_FILE_URL:-https://gitlab.com/fernvenue/chn-domains-list/-/raw/master/CHN.ALL.agh}"
+OUTPUT_FILE="${OUTPUT_FILE:-/opt/AdGuardHome/AdGuardHome.upstream}"
+REPLACE_UPSTREAM_DNS="${REPLACE_UPSTREAM_DNS:-}"
+RESTART_SERVICE="${RESTART_SERVICE:-}"
+LOG_LEVEL="${LOG_LEVEL:-info}"
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -212,24 +225,31 @@ DNS Upstream Configuration Script
 OPTIONS:
     --default-upstream <DNS_SERVER> (required, can be used multiple times)
         Add default upstream (AdGuardTeam/dnsproxy format).
+        Environment variable: DEFAULT_UPSTREAMS_ENV (comma-separated)
 
     --default-upstream-file <FILE> (optional)
         Local file with default upstreams (one per line).
+        Environment variable: DEFAULT_UPSTREAM_FILE
 
     --upstream-file <URL> (optional)
         URL to download upstream file from (default: https://gitlab.com/fernvenue/chn-domains-list/-/raw/master/CHN.ALL.agh).
+        Environment variable: UPSTREAM_FILE_URL
 
     --output-file <FILE> (optional)
         Output file path (default: /opt/AdGuardHome/AdGuardHome.upstream).
+        Environment variable: OUTPUT_FILE
 
     --replace-upstream-dns <DNS_SERVER> (optional)
         Replace DNS servers in [/domain/]dns entries.
+        Environment variable: REPLACE_UPSTREAM_DNS
 
     --restart-service <SERVICE> (optional)
         Restart systemd service after processing.
+        Environment variable: RESTART_SERVICE
 
     --log-level <LEVEL> (optional)
         Logging level: debug, info, warn, error (default: info).
+        Environment variable: LOG_LEVEL
 
     --help, -h
         Show this help.
