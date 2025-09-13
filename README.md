@@ -16,7 +16,7 @@ A pure shell to download, validate, and configure upstream DNS servers for [dnsp
 - [x] Systemd service integration with automatic restart capability;
 - [x] Built-in validation for all DNS server configurations;
 - [x] Flexible output file configuration for AdGuardHome integration.
-- [ ] Telegram notification support (planned).
+- [x] Telegram notification support.
 
 ## Usage
 
