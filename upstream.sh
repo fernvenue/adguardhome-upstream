@@ -54,9 +54,44 @@ validate_upstream() {
     return 1
 }
 
+validate_dns_server() {
+    local dns_server="$1"
+
+    if [[ "$dns_server" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]] || \
+       [[ "$dns_server" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}:[0-9]+$ ]] || \
+       [[ "$dns_server" =~ ^[0-9a-fA-F:]+$ ]] || \
+       [[ "$dns_server" =~ ^\[[0-9a-fA-F:]+\]$ ]] || \
+       [[ "$dns_server" =~ ^\[[0-9a-fA-F:]+\]:[0-9]+$ ]] || \
+       [[ "$dns_server" =~ ^(udp|tcp)://[^/]+$ ]] || \
+       [[ "$dns_server" =~ ^tls://[^/]+$ ]] || \
+       [[ "$dns_server" =~ ^https://[^/]+/dns-query$ ]] || \
+       [[ "$dns_server" =~ ^h3://[^/]+/dns-query$ ]] || \
+       [[ "$dns_server" =~ ^quic://[^/]+$ ]] || \
+       [[ "$dns_server" =~ ^sdns:// ]]; then
+        return 0
+    fi
+
+    return 1
+}
+
+replace_dns_in_upstream() {
+    local line="$1"
+    local replacement_dns="$2"
+
+    if [[ "$line" =~ ^\[/[^/]+/\](.+)$ ]]; then
+        local domain_part="${line%]*}"
+        echo "${domain_part}]${replacement_dns}"
+    else
+        echo "$line"
+    fi
+}
+
 DEFAULT_UPSTREAMS=()
 DEFAULT_UPSTREAM_FILE=""
 UPSTREAM_FILE_URL="https://gitlab.com/fernvenue/chn-domains-list/-/raw/master/CHN.ALL.agh"
+OUTPUT_FILE="/opt/AdGuardHome/AdGuardHome.upstream"
+REPLACE_UPSTREAM_DNS=""
+RESTART_SERVICE=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -96,6 +131,41 @@ while [[ $# -gt 0 ]]; do
             fi
             UPSTREAM_FILE_URL="$2"
             shift 2
+            ;;
+        --output-file)
+            if [[ -z "$2" ]]; then
+                log "Error: --output-file requires an argument"
+                exit 1
+            fi
+            OUTPUT_FILE="$2"
+            shift 2
+            ;;
+        --replace-upstream-dns)
+            if [[ -z "$2" ]]; then
+                log "Error: --replace-upstream-dns requires an argument"
+                exit 1
+            fi
+            if ! validate_dns_server "$2"; then
+                log "Error: Invalid DNS server format: $2"
+                exit 1
+            fi
+            log "Validated replacement DNS server: $2"
+            REPLACE_UPSTREAM_DNS="$2"
+            shift 2
+            ;;
+        --restart-service)
+            if [[ -z "$2" || "$2" == --* ]]; then
+                log "Error: --restart-service requires a service name"
+                exit 1
+            else
+                if [[ "$2" != *.service ]]; then
+                    RESTART_SERVICE="${2}.service"
+                    log "Service name processed: $2 -> $RESTART_SERVICE"
+                else
+                    RESTART_SERVICE="$2"
+                fi
+                shift 2
+            fi
             ;;
         *)
             log "Error: Unknown parameter: $1"
@@ -147,19 +217,31 @@ while IFS= read -r line; do
         exit 1
     fi
     if [[ -n "$line" && ! "$line" =~ ^[[:space:]]*# ]]; then
-        echo "$line" >> "/tmp/custom.upstream"
+        if [[ -n "$REPLACE_UPSTREAM_DNS" ]]; then
+            processed_line=$(replace_dns_in_upstream "$line" "$REPLACE_UPSTREAM_DNS")
+            echo "$processed_line" >> "/tmp/custom.upstream"
+        else
+            echo "$line" >> "/tmp/custom.upstream"
+        fi
     fi
 done < "/tmp/upstream.tmp"
 log "Upstream file validation completed"
+if [[ -n "$REPLACE_UPSTREAM_DNS" ]]; then
+    log "Applied DNS server replacement: $REPLACE_UPSTREAM_DNS"
+fi
 
 log "Processing data format..."
-cat "/tmp/default.upstream" "/tmp/custom.upstream" > /usr/share/adguardhome.upstream
+cat "/tmp/default.upstream" "/tmp/custom.upstream" > "$OUTPUT_FILE"
 
 log "Cleaning..."
 rm /tmp/*.upstream /tmp/upstream.tmp
 
-log "Restarting AdGuardHome service..."
-systemctl restart AdGuardHome
+if [[ -n "$RESTART_SERVICE" ]]; then
+    log "Restarting service: $RESTART_SERVICE"
+    systemctl restart "$RESTART_SERVICE"
+else
+    log "No service restart requested"
+fi
 
 log "All finished!"
 
