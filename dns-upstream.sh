@@ -107,6 +107,24 @@ replace_dns_in_upstream() {
     fi
 }
 
+send_telegram_notification() {
+    local message="$1"
+
+    if [[ -z "$TELEGRAM_BOT_TOKEN" || -z "$TELEGRAM_CHAT_ID" ]]; then
+        return 0
+    fi
+
+    local url="https://${TELEGRAM_CUSTOM_ENDPOINT}/bot${TELEGRAM_BOT_TOKEN}/sendMessage"
+    local payload
+    payload=$(jq -n --arg chat_id "$TELEGRAM_CHAT_ID" --arg text "$message" '{chat_id: $chat_id, text: $text, parse_mode: "HTML"}')
+
+    if ! curl -s -m 10 --connect-timeout 5 -X POST -H "Content-Type: application/json" -d "$payload" "$url" > /dev/null; then
+        log "Failed to send Telegram notification" warn
+    else
+        log "Telegram notification sent successfully" debug
+    fi
+}
+
 DEFAULT_UPSTREAMS=()
 if [[ -n "${DEFAULT_UPSTREAMS_ENV:-}" ]]; then
     IFS=',' read -ra ADDR <<< "$DEFAULT_UPSTREAMS_ENV"
@@ -127,6 +145,9 @@ OUTPUT_FILE="${OUTPUT_FILE:-/opt/AdGuardHome/AdGuardHome.upstream}"
 REPLACE_UPSTREAM_DNS="${REPLACE_UPSTREAM_DNS:-}"
 RESTART_SERVICE="${RESTART_SERVICE:-}"
 LOG_LEVEL="${LOG_LEVEL:-info}"
+TELEGRAM_BOT_TOKEN="${TELEGRAM_BOT_TOKEN:-}"
+TELEGRAM_CHAT_ID="${TELEGRAM_CHAT_ID:-}"
+TELEGRAM_CUSTOM_ENDPOINT="${TELEGRAM_CUSTOM_ENDPOINT:-api.telegram.org}"
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -218,6 +239,34 @@ while [[ $# -gt 0 ]]; do
             esac
             shift 2
             ;;
+        --telegram-bot-token)
+            if [[ -z "$2" ]]; then
+                log "Error: --telegram-bot-token requires an argument" error
+                exit 1
+            fi
+            TELEGRAM_BOT_TOKEN="$2"
+            shift 2
+            ;;
+        --telegram-chat-id)
+            if [[ -z "$2" ]]; then
+                log "Error: --telegram-chat-id requires an argument" error
+                exit 1
+            fi
+            TELEGRAM_CHAT_ID="$2"
+            shift 2
+            ;;
+        --telegram-custom-endpoint)
+            if [[ -z "$2" ]]; then
+                log "Error: --telegram-custom-endpoint requires an argument" error
+                exit 1
+            fi
+            if ! [[ "$2" =~ ^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$ ]]; then
+                log "Error: Invalid domain format: $2" error
+                exit 1
+            fi
+            TELEGRAM_CUSTOM_ENDPOINT="$2"
+            shift 2
+            ;;
         --help|-h)
             cat << EOF
 DNS Upstream Configuration Script
@@ -251,6 +300,18 @@ OPTIONS:
         Logging level: debug, info, warn, error (default: info).
         Environment variable: LOG_LEVEL
 
+    --telegram-bot-token <TOKEN> (optional)
+        Telegram bot token for notifications.
+        Environment variable: TELEGRAM_BOT_TOKEN
+
+    --telegram-chat-id <ID> (optional)
+        Telegram chat ID for notifications.
+        Environment variable: TELEGRAM_CHAT_ID
+
+    --telegram-custom-endpoint <DOMAIN> (optional)
+        Custom Telegram API endpoint domain (default: api.telegram.org).
+        Environment variable: TELEGRAM_CUSTOM_ENDPOINT
+
     --help, -h
         Show this help.
 EOF
@@ -270,14 +331,25 @@ fi
 
 set -e
 
+DEFAULT_DNS_COUNT=0
+CUSTOM_DNS_COUNT=0
 
 log "Creating default upstream configuration..."
 
-> "/tmp/default.upstream"
+> "./default.upstream.tmp"
+log "Created default upstream file" debug
 
 for upstream in "${DEFAULT_UPSTREAMS[@]}"; do
-    echo "$upstream" >> "/tmp/default.upstream"
+    log "Adding upstream: $upstream" debug
+    echo "$upstream" >> "./default.upstream.tmp" || {
+        log "Failed to write to default.upstream.tmp" error
+        exit 1
+    }
+    DEFAULT_DNS_COUNT=$((DEFAULT_DNS_COUNT + 1))
+    log "DNS count now: $DEFAULT_DNS_COUNT" debug
 done
+
+log "Default upstreams processed: $DEFAULT_DNS_COUNT" debug
 
 if [[ -n "$DEFAULT_UPSTREAM_FILE" ]]; then
     log "Validating upstream file: $DEFAULT_UPSTREAM_FILE"
@@ -287,19 +359,20 @@ if [[ -n "$DEFAULT_UPSTREAM_FILE" ]]; then
             exit 1
         fi
         if [[ -n "$line" && ! "$line" =~ ^[[:space:]]*# ]]; then
-            echo "$line" >> "/tmp/default.upstream"
+            echo "$line" >> "./default.upstream.tmp"
+            DEFAULT_DNS_COUNT=$((DEFAULT_DNS_COUNT + 1))
         fi
     done < "$DEFAULT_UPSTREAM_FILE"
     log "Upstream file validation completed: $DEFAULT_UPSTREAM_FILE"
 fi
 
 log "Downloading and validating upstream file: $UPSTREAM_FILE_URL"
-if ! curl -s "$UPSTREAM_FILE_URL" > "/tmp/upstream.tmp"; then
-    log "Error: Failed to download upstream file from $UPSTREAM_FILE_URL"
+if ! curl -s -m 30 --connect-timeout 10 "$UPSTREAM_FILE_URL" > "./upstream.download.tmp"; then
+    log "Error: Failed to download upstream file from $UPSTREAM_FILE_URL" error
     exit 1
 fi
 
-> "/tmp/custom.upstream"
+> "./custom.upstream.tmp"
 while IFS= read -r line; do
     if ! validate_upstream "$line"; then
         log "Error: Invalid upstream format in downloaded file: $line"
@@ -308,22 +381,23 @@ while IFS= read -r line; do
     if [[ -n "$line" && ! "$line" =~ ^[[:space:]]*# ]]; then
         if [[ -n "$REPLACE_UPSTREAM_DNS" ]]; then
             processed_line=$(replace_dns_in_upstream "$line" "$REPLACE_UPSTREAM_DNS")
-            echo "$processed_line" >> "/tmp/custom.upstream"
+            echo "$processed_line" >> "./custom.upstream.tmp"
         else
-            echo "$line" >> "/tmp/custom.upstream"
+            echo "$line" >> "./custom.upstream.tmp"
         fi
+        CUSTOM_DNS_COUNT=$((CUSTOM_DNS_COUNT + 1))
     fi
-done < "/tmp/upstream.tmp"
+done < "./upstream.download.tmp"
 log "Upstream file validation completed"
 if [[ -n "$REPLACE_UPSTREAM_DNS" ]]; then
     log "Applied DNS server replacement: $REPLACE_UPSTREAM_DNS" debug
 fi
 
 log "Processing data format..."
-cat "/tmp/default.upstream" "/tmp/custom.upstream" > "$OUTPUT_FILE"
+cat "./default.upstream.tmp" "./custom.upstream.tmp" > "$OUTPUT_FILE"
 
 log "Cleaning..."
-rm /tmp/*.upstream /tmp/upstream.tmp
+rm -f ./*.upstream.tmp ./upstream.download.tmp
 
 if [[ -n "$RESTART_SERVICE" ]]; then
     log "Restarting service: $RESTART_SERVICE"
@@ -333,5 +407,36 @@ else
 fi
 
 log "All finished!"
+
+TOTAL_DNS_COUNT=$((DEFAULT_DNS_COUNT + CUSTOM_DNS_COUNT))
+NOTIFICATION_MESSAGE="🎯 DNS Upstream Configuration Completed Successfully!
+
+📊 Statistics:
+Hostname: <code>$(hostname)</code>
+Default upstream DNS count: ${DEFAULT_DNS_COUNT}
+Upstream file DNS rules count: ${CUSTOM_DNS_COUNT}
+Total DNS rules processed: ${TOTAL_DNS_COUNT}
+
+📁 Output:
+File: <code>${OUTPUT_FILE}</code>"
+
+if [[ -n "$REPLACE_UPSTREAM_DNS" ]]; then
+    NOTIFICATION_MESSAGE="${NOTIFICATION_MESSAGE}
+Replacement DNS: <code>${REPLACE_UPSTREAM_DNS}</code>"
+fi
+
+if [[ -n "$RESTART_SERVICE" ]]; then
+    NOTIFICATION_MESSAGE="${NOTIFICATION_MESSAGE}
+
+🔄 Service Management:
+Service restarted: <code>${RESTART_SERVICE}</code>"
+else
+    NOTIFICATION_MESSAGE="${NOTIFICATION_MESSAGE}
+
+⚠️ Service Management:
+No service restart requested"
+fi
+
+send_telegram_notification "$NOTIFICATION_MESSAGE"
 
 unset IS_SYSTEMD

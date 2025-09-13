@@ -1,5 +1,5 @@
 [Unit]
-Description=AdGuardHome Upstream Timer
+Description=DNS Upstream Timer
 After=network-online.target
 
 [Timer]
