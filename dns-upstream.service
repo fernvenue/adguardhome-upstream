@@ -1,5 +1,5 @@
 [Unit]
-Description=AdGuardHome Upstream Service
+Description=DNS Upstream Service
 Documentation=https://github.com/fernvenue/dns-upstream
 After=network-online.target
 
