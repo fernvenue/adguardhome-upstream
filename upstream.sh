@@ -205,6 +205,37 @@ while [[ $# -gt 0 ]]; do
             esac
             shift 2
             ;;
+        --help|-h)
+            cat << EOF
+DNS Upstream Configuration Script
+
+OPTIONS:
+    --default-upstream <DNS_SERVER> (required, can be used multiple times)
+        Add default upstream (AdGuardTeam/dnsproxy format).
+
+    --default-upstream-file <FILE> (optional)
+        Local file with default upstreams (one per line).
+
+    --upstream-file <URL> (optional)
+        URL to download upstream file from (default: https://gitlab.com/fernvenue/chn-domains-list/-/raw/master/CHN.ALL.agh).
+
+    --output-file <FILE> (optional)
+        Output file path (default: /opt/AdGuardHome/AdGuardHome.upstream).
+
+    --replace-upstream-dns <DNS_SERVER> (optional)
+        Replace DNS servers in [/domain/]dns entries.
+
+    --restart-service <SERVICE> (optional)
+        Restart systemd service after processing.
+
+    --log-level <LEVEL> (optional)
+        Logging level: debug, info, warn, error (default: info).
+
+    --help, -h
+        Show this help.
+EOF
+            exit 0
+            ;;
         *)
             log "Error: Unknown parameter: $1" error
             exit 1
