@@ -14,4 +14,4 @@ RestartSec=5s
 # Environment=REPLACE_UPSTREAM_DNS="2001:db8::53"
 # Environment=RESTART_SERVICE="AdGuardHome"
 # Environment=LOG_LEVEL="info"
-ExecStart=/bin/bash /usr/local/bin/upstream.sh
+ExecStart=/bin/bash /usr/local/bin/dns-upstream.sh
