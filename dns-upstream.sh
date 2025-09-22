@@ -42,20 +42,25 @@ validate_upstream() {
 
     if [[ "$upstream" =~ ^\[/[^/]+/\](.+)$ ]]; then
         local actual_upstream="${BASH_REMATCH[1]}"
-        if [[ "$actual_upstream" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]] || \
-           [[ "$actual_upstream" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}:[0-9]+$ ]] || \
-           [[ "$actual_upstream" =~ ^[0-9a-fA-F:]+$ ]] || \
-           [[ "$actual_upstream" =~ ^\[[0-9a-fA-F:]+\]$ ]] || \
-           [[ "$actual_upstream" =~ ^\[[0-9a-fA-F:]+\]:[0-9]+$ ]] || \
-           [[ "$actual_upstream" =~ ^(udp|tcp)://[^/]+$ ]] || \
-           [[ "$actual_upstream" =~ ^tls://[^/]+$ ]] || \
-           [[ "$actual_upstream" =~ ^https://[^/]+/dns-query$ ]] || \
-           [[ "$actual_upstream" =~ ^h3://[^/]+/dns-query$ ]] || \
-           [[ "$actual_upstream" =~ ^quic://[^/]+$ ]] || \
-           [[ "$actual_upstream" =~ ^sdns:// ]]; then
-            return 0
-        fi
-        return 1
+        IFS=' ' read -ra servers <<< "$actual_upstream"
+        for server in "${servers[@]}"; do
+            if [[ -n "$server" ]]; then
+                if ! [[ "$server" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]] && \
+                   ! [[ "$server" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}:[0-9]+$ ]] && \
+                   ! [[ "$server" =~ ^[0-9a-fA-F:]+$ ]] && \
+                   ! [[ "$server" =~ ^\[[0-9a-fA-F:]+\]$ ]] && \
+                   ! [[ "$server" =~ ^\[[0-9a-fA-F:]+\]:[0-9]+$ ]] && \
+                   ! [[ "$server" =~ ^(udp|tcp)://[^/]+$ ]] && \
+                   ! [[ "$server" =~ ^tls://[^/]+$ ]] && \
+                   ! [[ "$server" =~ ^https://[^/]+/dns-query$ ]] && \
+                   ! [[ "$server" =~ ^h3://[^/]+/dns-query$ ]] && \
+                   ! [[ "$server" =~ ^quic://[^/]+$ ]] && \
+                   ! [[ "$server" =~ ^sdns:// ]]; then
+                    return 1
+                fi
+            fi
+        done
+        return 0
     fi
 
     if [[ "$upstream" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]] || \
