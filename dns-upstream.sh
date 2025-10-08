@@ -150,6 +150,7 @@ OUTPUT_FILE="${OUTPUT_FILE:-/opt/AdGuardHome/AdGuardHome.upstream}"
 REPLACE_UPSTREAM_DNS="${REPLACE_UPSTREAM_DNS:-}"
 RESTART_SERVICE="${RESTART_SERVICE:-}"
 LOG_LEVEL="${LOG_LEVEL:-info}"
+VALIDATE_UPSTREAM_FILE="${VALIDATE_UPSTREAM_FILE:-true}"
 TELEGRAM_BOT_TOKEN="${TELEGRAM_BOT_TOKEN:-}"
 TELEGRAM_CHAT_ID="${TELEGRAM_CHAT_ID:-}"
 TELEGRAM_CUSTOM_ENDPOINT="${TELEGRAM_CUSTOM_ENDPOINT:-api.telegram.org}"
@@ -244,6 +245,10 @@ while [[ $# -gt 0 ]]; do
             esac
             shift 2
             ;;
+        --validate-upstream-file)
+            VALIDATE_UPSTREAM_FILE=true
+            shift
+            ;;
         --telegram-bot-token)
             if [[ -z "$2" ]]; then
                 log "Error: --telegram-bot-token requires an argument" error
@@ -304,6 +309,10 @@ OPTIONS:
     --log-level <LEVEL> (optional)
         Logging level: debug, info, warn, error (default: info).
         Environment variable: LOG_LEVEL
+
+    --validate-upstream-file (optional)
+        Enable validation of downloaded upstream file (default: true).
+        Environment variable: VALIDATE_UPSTREAM_FILE
 
     --telegram-bot-token <TOKEN> (optional)
         Telegram bot token for notifications.
@@ -379,9 +388,11 @@ fi
 
 > "./custom.upstream.tmp"
 while IFS= read -r line; do
-    if ! validate_upstream "$line"; then
-        log "Error: Invalid upstream format in downloaded file: $line"
-        exit 1
+    if [[ "$VALIDATE_UPSTREAM_FILE" == "true" ]]; then
+        if ! validate_upstream "$line"; then
+            log "Error: Invalid upstream format in downloaded file: $line" error
+            exit 1
+        fi
     fi
     if [[ -n "$line" && ! "$line" =~ ^[[:space:]]*# ]]; then
         if [[ -n "$REPLACE_UPSTREAM_DNS" ]]; then
