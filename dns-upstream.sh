@@ -150,7 +150,6 @@ OUTPUT_FILE="${OUTPUT_FILE:-/opt/AdGuardHome/AdGuardHome.upstream}"
 REPLACE_UPSTREAM_DNS="${REPLACE_UPSTREAM_DNS:-}"
 RESTART_SERVICE="${RESTART_SERVICE:-}"
 LOG_LEVEL="${LOG_LEVEL:-info}"
-VALIDATE_UPSTREAM_FILE="${VALIDATE_UPSTREAM_FILE:-true}"
 TELEGRAM_BOT_TOKEN="${TELEGRAM_BOT_TOKEN:-}"
 TELEGRAM_CHAT_ID="${TELEGRAM_CHAT_ID:-}"
 TELEGRAM_CUSTOM_ENDPOINT="${TELEGRAM_CUSTOM_ENDPOINT:-api.telegram.org}"
@@ -245,10 +244,6 @@ while [[ $# -gt 0 ]]; do
             esac
             shift 2
             ;;
-        --validate-upstream-file)
-            VALIDATE_UPSTREAM_FILE=true
-            shift
-            ;;
         --telegram-bot-token)
             if [[ -z "$2" ]]; then
                 log "Error: --telegram-bot-token requires an argument" error
@@ -309,10 +304,6 @@ OPTIONS:
     --log-level <LEVEL> (optional)
         Logging level: debug, info, warn, error (default: info).
         Environment variable: LOG_LEVEL
-
-    --validate-upstream-file (optional)
-        Enable validation of downloaded upstream file (default: true).
-        Environment variable: VALIDATE_UPSTREAM_FILE
 
     --telegram-bot-token <TOKEN> (optional)
         Telegram bot token for notifications.
@@ -380,31 +371,21 @@ if [[ -n "$DEFAULT_UPSTREAM_FILE" ]]; then
     log "Upstream file validation completed: $DEFAULT_UPSTREAM_FILE"
 fi
 
-log "Downloading and validating upstream file: $UPSTREAM_FILE_URL"
+log "Downloading upstream file: $UPSTREAM_FILE_URL"
 if ! curl -s -m 30 --connect-timeout 10 "$UPSTREAM_FILE_URL" > "./upstream.download.tmp"; then
     log "Error: Failed to download upstream file from $UPSTREAM_FILE_URL" error
     exit 1
 fi
+log "Download completed"
 
-> "./custom.upstream.tmp"
-while IFS= read -r line; do
-    if [[ "$VALIDATE_UPSTREAM_FILE" == "true" ]]; then
-        if ! validate_upstream "$line"; then
-            log "Error: Invalid upstream format in downloaded file: $line" error
-            exit 1
-        fi
-    fi
-    if [[ -n "$line" && ! "$line" =~ ^[[:space:]]*# ]]; then
-        if [[ -n "$REPLACE_UPSTREAM_DNS" ]]; then
-            processed_line=$(replace_dns_in_upstream "$line" "$REPLACE_UPSTREAM_DNS")
-            echo "$processed_line" >> "./custom.upstream.tmp"
-        else
-            echo "$line" >> "./custom.upstream.tmp"
-        fi
-        CUSTOM_DNS_COUNT=$((CUSTOM_DNS_COUNT + 1))
-    fi
-done < "./upstream.download.tmp"
-log "Upstream file validation completed"
+log "Processing upstream file..."
+if [[ -n "$REPLACE_UPSTREAM_DNS" ]]; then
+    sed -e '/^[[:space:]]*$/d' -e '/^[[:space:]]*#/d' -e "s#\]\(.*\)#]${REPLACE_UPSTREAM_DNS}#" "./upstream.download.tmp" > "./custom.upstream.tmp"
+else
+    grep -v '^[[:space:]]*$' "./upstream.download.tmp" | grep -v '^[[:space:]]*#' > "./custom.upstream.tmp"
+fi
+CUSTOM_DNS_COUNT=$(wc -l < "./custom.upstream.tmp")
+log "Upstream file processing completed"
 if [[ -n "$REPLACE_UPSTREAM_DNS" ]]; then
     log "Applied DNS server replacement: $REPLACE_UPSTREAM_DNS" debug
 fi
